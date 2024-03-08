@@ -1,0 +1,23 @@
+# testing.sub
+universe = vanilla
+
+# IMPORTANT! Require execute servers that have Staging:
+requirements = (TARGET.HasCHTCStaging == TRUE)
+
+# Specify executable
+executable = source/submit/testing/testing.sh
+
+# Pass HTCondor job ID as environment variable
+environment = CONDOR_JOB_ID=$(Cluster).$(Process)
+
+# Set files to capture log & standard error stream
+log = ../logs/testing_$(Cluster).log
+error = ../logs/testing_$(Cluster).err
+
+transfer_input_files = utils
+
+request_cpus = 1
+request_disk = $(disk)
+request_memory = $(memory)
+
+queue
