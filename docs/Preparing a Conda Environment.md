@@ -1,5 +1,7 @@
 # Preparing a Portable Python Environment with Miniconda
 
+This document details how to prepare a portable Python environment using Miniconda and `conda-pack`. The environment can be deployed on another machine without having to install Miniconda first.
+
 These instructions were adapted from the [CHTC website](https://chtc.cs.wisc.edu/uw-research-computing/conda-installation.html).
 
 ## References
@@ -83,7 +85,7 @@ conda deactivate
 
 
 
-3. **Package the environment into a .tar archive**
+3. **Package the environment into a `.tar` archive**
    Finally, the environment is packed from within the base environment:
 
   ```{bash eval=F
