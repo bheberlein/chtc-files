@@ -131,17 +131,8 @@ mv ${FLIGHTLINE}_processed.tar.gz $STAGING/data/processed/$SESSION/
 # :----------- MAKE QUICKLOOKS ----------: #
 
 # Generate quicklook images
-QUICKLOOK=${FLIGHTLINE}_quicklooks
-
-mkdir $QUICKLOOK
-
 source utils/quicklook.sh
-make_quicklook 74 46 21 $QUICKLOOK/${FLIGHTLINE}_TrueColorVIS
-make_quicklook 236 316 406 $QUICKLOOK/${FLIGHTLINE}_FalseColorSWIR
-make_quicklook 330 380 460 $QUICKLOOK/${FLIGHTLINE}_DestripedSWIR
-
-# Pack quicklooks into .TAR.GZ archive
-tar -czvf $QUICKLOOK.tar.gz $QUICKLOOK/*
+generate_quicklooks $FLIGHTLINE
 
 # Move quicklooks back to CHTC staging (NOTE: No need to remove after)
 mkdir -p $STAGING/data/quicklook/$SESSION
@@ -152,6 +143,5 @@ mv ${QUICKLOOK}.tar.gz $STAGING/data/quicklook/$SESSION/
 rm -r $ENVDIR
 rm -r hypro data output
 rm -r $FLIGHTLINE
-rm -r $QUICKLOOK
 
 exit
