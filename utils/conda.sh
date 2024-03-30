@@ -1,5 +1,17 @@
 #!/usr/bin/bash
 
+conda_install () {
+  system=$(uname -s)
+  architecture=$(uname -m)
+  conda_dir=~/conda/conda
+  conda_repo=https://repo.anaconda.com/miniconda
+  conda_installer=$conda_repo/Miniconda3-latest-${system}-${architecture}.sh
+  wget $conda_installer -O conda.sh
+  sh conda.sh -b -p $conda_dir
+  rm conda.sh
+  $conda_dir/condabin/conda init
+}
+
 conda_setup () {
   # Resolve environment package & directory
   [[ -z "${ENVDIR+x}" ]] && ENVDIR=$ENVNAME
