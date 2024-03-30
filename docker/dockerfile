@@ -1,0 +1,14 @@
+# EnSpec docker container
+
+# Metadata
+LABEL NAME=EnSpec
+LABEL VERSION=0.0.1
+LABEL AUTHOR=bheberlein@wisc.edu
+
+# Build instructions
+FROM ubuntu:latest
+WORKDIR /app
+COPY . .
+RUN echo "Hello, world!"
+CMD ["python"]
+EXPOSE 3000
