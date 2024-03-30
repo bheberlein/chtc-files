@@ -17,11 +17,6 @@ ENVDIR=$ENVNAME
 # Packages
 ENVTAR=$ENVNAME-new.tar.gz
 HYPROTAR=hypro_1.0.1dev2.tar.gz
-# Options
-if [ -z ${COMPRESSED_INPUTS+x} ]; then
-  COMPRESSED_INPUTS=1;
-fi
-
 
 # :--------- SET UP ENVIRONMENT ---------: #
 
@@ -43,7 +38,8 @@ resolve_variables "$@"
 # Copy over HyPro source files & unpack
 cp $PACKAGE_DIR/$HYPROTAR .
 mkdir hypro
-tar -xzf $HYPROTAR -C hypro && rm $HYPROTAR
+source utils/archive.sh
+unpack $HYPROTAR -C hypro
 
 # NOTE: Currently, code is structured as
 #  hypro/
@@ -54,20 +50,11 @@ tar -xzf $HYPROTAR -C hypro && rm $HYPROTAR
 # Set up directories for raw & processed data
 mkdir data output
 
-if [[ $COMPRESSED_INPUTS == 1 ]]; then
-  TAREXT=".tar.gz";
-  TARFLAGS="-xzf";
-else
-  TAREXT=".tar";
-  TARFLAGS="-xf";
-fi
-
-RAW_INPUT=${FLIGHTLINE}${TAREXT}
-
-# Copy over raw input data
-cp $STAGING/data/raw/$SESSION/$RAW_INPUT data/
-# Unpack
-tar $TARFLAGS data/$RAW_INPUT -C data && rm data/$RAW_INPUT
+# Look for raw data inputs
+RAW_INPUT=$(find $STAGING/data/raw/$SESSION -name "$FLIGHTLINE.*" -print -quit)
+if [ ! -f ${RAW_INPUT} ]; then echo "Raw inputs not found!"; exit 1; fi
+# Copy over input data
+cp $RAW_INPUT data/ && unpack data/"${RAW_INPUT##*/}" -C data
 
 # Resolve processing configuration file
 source utils/config.sh

@@ -30,8 +30,4 @@ if defined project
    arguments=$(arguments) $(project)
 endif
 
-if defined compressed
-   environment = "COMPRESSED_INPUTS=$(compressed)"
-endif
-
 queue site, date, line, disk, memory from $(joblist)
