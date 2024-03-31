@@ -18,6 +18,11 @@ ENVDIR=$ENVNAME
 ENVTAR=$ENVNAME-new.tar.gz
 HYPROTAR=hypro_1.0.1dev2.tar.gz
 
+# Whether to keep raw (unprojected) products
+KEEP_RAW=1
+# Whether to keep radiance products
+KEEP_RDN=1
+
 # :--------- SET UP ENVIRONMENT ---------: #
 
 # Set up Conda/Python environment
@@ -50,7 +55,7 @@ unpack $HYPROTAR -C hypro
 # Set up directories for raw & processed data
 mkdir data output
 
-# Look for raw data inputs
+# Look for raw data inputs (NOTE: Takes the first matching file)
 RAW_INPUT=$(find $STAGING/data/raw/$SESSION -name "$FLIGHTLINE.*" -print -quit)
 if [ ! -f ${RAW_INPUT} ]; then echo "Raw inputs not found!"; exit 1; fi
 # Copy over input data
@@ -69,64 +74,67 @@ python hypro/src/hypro/workflow/main.py data/$CONFIG
 
 # :----------- PACK UP OUTPUTS ----------: #
 
+# Remove atmospheric database files
+rm -r output/$FLIGHTLINE/atm
+# Remove single-sensor products from merged directory
+rm output/$FLIGHTLINE/merge/${FLIGHTLINE}_{VNIR,SWIR}_*
+# Remove temporary files from orthorectification
+rm output/${FLIGHTLINE}/{vnir,swir}/OrthorectifiedImageData{,.hdr,.aux.xml}
+
 mkdir $FLIGHTLINE
-mkdir $FLIGHTLINE/{VNIR,SWIR}
 
 # Processing log
 mv output/*.log $FLIGHTLINE/
-
-# Merged reflectance imagery & ancillary datasets
+# Merged orthorectified imagery & ancillary datasets
 mv output/$FLIGHTLINE/merge/* $FLIGHTLINE/
-# # Remove single-sensor datasets
-# rm $FLIGHTLINE/${FLIGHTLINE}_{VNIR,SWIR}_*
-# Ancillary datasets
-mv $FLIGHTLINE/ancillary/* $FLIGHTLINE/
-rm -d $FLIGHTLINE/ancillary
 
-# BASICALLY EVERYTHING EXCEPT AvgRdn, DataMask, DEM, GLT, ProcessedNavData, Singleband
+if [ $KEEP_RDN = 0 ]; then
+  rm $FLIGHTLINE/${FLIGHTLINE}_MergedRadiance{,.hdr}
+fi
 
-# # Raw radiance imagery & calibration coefficients
-# mv output/$FLIGHTLINE/*/${FLIGHTLINE}_*_{Raw,Resampled}Rdn{,.hdr} $FLIGHTLINE/
-# mv output/$FLIGHTLINE/*/${FLIGHTLINE}_*_RadioCaliCoeff{,.hdr} $FLIGHTLINE/
-# # Saturation quality control metrics
-# mv output/$FLIGHTLINE/*/${FLIGHTLINE}_*_Saturation{Mask,PercentBands,PercentValue}{,.hdr} $FLIGHTLINE/
-# Smile effect data
-mv output/$FLIGHTLINE/*/${FLIGHTLINE}_*_SmileEffect{,AtAtmFeatures}{,.hdr} $FLIGHTLINE/
-# Water vapor model
-mv output/$FLIGHTLINE/*/${FLIGHTLINE}_*_WVCModel.json $FLIGHTLINE/
-# Unmerged image geometries
-mv output/$FLIGHTLINE/*/*_{,Corrected}IGM{,.hdr} $FLIGHTLINE/
-# Scan angles & path length
-mv output/$FLIGHTLINE/*/*_RawSCA{,.hdr} $FLIGHTLINE/
-mv output/$FLIGHTLINE/*/*_RawPathLength{,.hdr} $FLIGHTLINE/
-# Classification map
-mv output/$FLIGHTLINE/*/${FLIGHTLINE}_*_PreClass{,.hdr} $FLIGHTLINE/
-# Merged & unmerged image spatial footprints
-mv output/$FLIGHTLINE/*/*_DataFootprint*.{dbf,prj,sh[px]} $FLIGHTLINE/
-# Coregistration tie points
-mv output/$FLIGHTLINE/*/*_*CoRegPoints.{csv,png} $FLIGHTLINE/
-mv output/$FLIGHTLINE/*/*_*CoRegShiftDistribution.png $FLIGHTLINE/
-# Plots & figures
-mv output/$FLIGHTLINE/*/*.png $FLIGHTLINE/
-
-# # Move single-sensor products to their own directories
-# # (these were placed in the `merge` directory for some reason)
-# for f in $FLIGHTLINE/${FLIGHTLINE}_{VNIR,SWIR}_*; do
-#   mv $f $FLIGHTLINE/${f:(${#FLIGHTLINE}+1)*2:4}
-# done
-
-# mv output/$FLIGHTLINE/*/${FLIGHTLINE}_MergedPathLength{,.hdr} $FLIGHTLINE/ancillary
-# mv output/$FLIGHTLINE/*/${FLIGHTLINE}_MergedSCA{,.hdr} $FLIGHTLINE/ancillary
-# mv output/$FLIGHTLINE/*/${FLIGHTLINE}_WVC{,.hdr} $FLIGHTLINE/ancillary
-# mv output/$FLIGHTLINE/*/${FLIGHTLINE}_VIS{,.hdr} $FLIGHTLINE/ancillary
+# Single-sensor products
+for SENSOR in VNIR SWIR; do
+  mkdir $FLIGHTLINE/$SENSOR
+  SENSOR_DIRECTORY=output/$FLIGHTLINE/${SENSOR,,}
+  
+  # Smile effect model
+  mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_SmileEffect{,AtAtmFeatures}{,.hdr} $FLIGHTLINE/$SENSOR
+  # Water vapor model
+  mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_WVCModel.json $FLIGHTLINE/$SENSOR
+  # Plots & figures
+  mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_*.png $FLIGHTLINE/$SENSOR
+  
+  # Data footprint
+  mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_DataFootprint{,CoReg}.{dbf,prj,sh[px]} $FLIGHTLINE/$SENSOR
+  
+  # Raw sensor products
+  if [ $KEEP_RAW = 1 ]; then
+    mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_IGM{,.hdr} $FLIGHTLINE/$SENSOR
+    mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_PreClass{,.hdr} $FLIGHTLINE/$SENSOR
+    mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_ProcessedNavData.txt $FLIGHTLINE/$SENSOR
+    mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_RadioCaliCoeff{,.hdr} $FLIGHTLINE/$SENSOR
+    mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_Raw{Rdn,PathLength,SCA}{,.hdr,.aux.xml} $FLIGHTLINE/$SENSOR
+  fi
+  
+  # Coregistration files
+  # NOTE: Use subshell to localize `shopt`
+  (
+    shopt -s nullglob
+    for f in $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_*CoRegPoints.{csv,png} \
+             $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_*{,Corrected}{IGM,RawSCA}{,.hdr,.aux.xml} \
+             $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_CoregistrationShifts{,.hdr}; do
+      mv $f $FLIGHTLINE/$SENSOR
+    done
+  )
+done
 
 # Pack outputs into .TAR.GZ archive
 tar -czf ${FLIGHTLINE}_processed.tar.gz $FLIGHTLINE/*
 
 # Move outputs back to CHTC staging (NOTE: No need to remove after)
-mkdir -p $STAGING/data/processed/$SESSION
-mv ${FLIGHTLINE}_processed.tar.gz $STAGING/data/processed/$SESSION/
-# mv $FLIGHTLINE $STAGING/data/processed/$SESSION/
+PROCESSED_DIRECTORY=$STAGING/data/processed/$SESSION
+mkdir -p $PROCESSED_DIRECTORY
+mv ${FLIGHTLINE}_processed.tar.gz $PROCESSED_DIRECTORY/
 
 # :----------- MAKE QUICKLOOKS ----------: #
 
@@ -135,8 +143,17 @@ source utils/quicklook.sh
 generate_quicklooks $FLIGHTLINE
 
 # Move quicklooks back to CHTC staging (NOTE: No need to remove after)
-mkdir -p $STAGING/data/quicklook/$SESSION
-mv ${QUICKLOOK}.tar.gz $STAGING/data/quicklook/$SESSION/
+QUICKLOOK_DIRECTORY=$STAGING/data/quicklook/$SESSION
+mkdir -p $QUICKLOOK_DIRECTORY
+mv ${QUICKLOOK}.tar.gz $QUICKLOOK_DIRECTORY/
+
+# :--------- MANAGE PERMISSIONS ---------: #
+
+# Set group write permissions (important if using group storage allocation on Staging)
+chmod 770 $PROCESSED_DIRECTORY
+chmod 770 $QUICKLOOK_DIRECTORY
+chmod 660 $PROCESSED_DIRECTORY/${FLIGHTLINE}_Processed.tar.gz
+chmod 660 $QUICKLOOK_DIRECTORY/${QUICKLOOK}.tar.gz
 
 # -------------- CLEAN UP -------------- #
 
@@ -144,4 +161,4 @@ rm -r $ENVDIR
 rm -r hypro data output
 rm -r $FLIGHTLINE
 
-exit
+exit 0
