@@ -2,12 +2,13 @@ name: htconda
 channels:
   - conda-forge
 dependencies:
-  - python=3.6
-  - gdal=2.4.4
-  - numpy=1.19.4
-  - matplotlib=3.3.2
-  - pandas=1.1.4
-  - h5py=2.10.0
-  - scipy=1.5.3
+  - python=3.8
+  - gdal=3
+  - numpy=1.20
+  - matplotlib=3.3
+  - pandas=1.2
+  - h5py=3.1
+  - scipy=1.6
   - scikit-learn
   - numba
+  - shapely
