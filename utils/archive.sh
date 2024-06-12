@@ -10,3 +10,10 @@ unpack () {
   # Unpack the archive
   tar $TARFLAGS $@ && rm $1
 }
+
+extract_remove () {
+  for f in *.tar.gz; do
+    echo $f;
+    unpack $f;
+  done
+}
