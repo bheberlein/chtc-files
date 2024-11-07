@@ -70,7 +70,7 @@ cp $CONFIG_DIR/$CONFIG data/"${CONFIG##*/}"
 # :----------- RUN PROCESSING -----------: #
 
 # Run HyPro reflectance processing
-python hypro/src/hypro/workflow/main.py data/$CONFIG
+python hypro/src/hypro/workflow/main.py data/"${CONFIG##*/}"
 
 # :----------- PACK UP OUTPUTS ----------: #
 
