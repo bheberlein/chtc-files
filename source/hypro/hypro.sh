@@ -62,6 +62,7 @@ if [ ! -f ${RAW_INPUT} ]; then echo "Raw inputs not found!"; exit 1; fi
 cp $RAW_INPUT data/ && unpack data/"${RAW_INPUT##*/}" -C data
 
 # Resolve processing configuration file
+# NOTE: Takes the first file found from: {SITE-NAME_YYYYMMDD/SITE-NAME_YYYYMMDD,SITE-NAME_YYYY,PROJECT}_Config.json
 source utils/config.sh
 resolve_config
 # Copy over JSON configuration file (strip out leading directories if present)
