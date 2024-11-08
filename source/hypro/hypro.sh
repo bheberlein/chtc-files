@@ -16,7 +16,7 @@ ENVNAME=htconda
 ENVDIR=$ENVNAME
 # Packages
 ENVTAR=$ENVNAME-new.tar.gz
-HYPROTAR=hypro_1.0.1dev2.tar.gz
+HYPROTAR=hypro_1.0.1dev4.tar.gz
 
 # Whether to keep raw (unprojected) products
 KEEP_RAW=1
@@ -61,17 +61,35 @@ if [ ! -f ${RAW_INPUT} ]; then echo "Raw inputs not found!"; exit 1; fi
 # Copy over input data
 cp $RAW_INPUT data/ && unpack data/"${RAW_INPUT##*/}" -C data
 
+# TEMPORARY FIX: Repair mislabeled input data archives
+source utils/repair.sh
+repair
+
 # Resolve processing configuration file
-# NOTE: Takes the first file found from: {SITE-NAME_YYYYMMDD/SITE-NAME_YYYYMMDD,SITE-NAME_YYYY,PROJECT}_Config.json
 source utils/config.sh
 resolve_config
 # Copy over JSON configuration file (strip out leading directories if present)
 cp $CONFIG_DIR/$CONFIG data/"${CONFIG##*/}"
 
+# If grid rotation is passed in as an environment variable, update the configuration file
+if [ -n "${GRID_ROTATION+x}" ]; then
+  echo "Updating processing grid rotation: $GRID_ROTATION"
+  mv data/"${CONFIG##*/}" data/"${CONFIG##*/}.tmp"
+  jq -r --arg GRID_ROTATION "$GRID_ROTATION" '.Geometric_Correction.rotation = $GRID_ROTATION' data/"${CONFIG##*/}.tmp" > data/"${CONFIG##*/}"
+  rm data/"${CONFIG##*/}.tmp"
+fi
+
 # :----------- RUN PROCESSING -----------: #
 
 # Run HyPro reflectance processing
-python hypro/src/hypro/workflow/main.py data/"${CONFIG##*/}"
+if python hypro/src/hypro/workflow/main.py data/"${CONFIG##*/}"; then
+  echo "SUCCESS: Processing completed with normal exit code."
+else
+  echo "FAILED: Processing completed with abnormal exit code."
+  # If Python exits with an error, copy all files back to Staging & exit
+  mv output/* $STAGING/data/processed/$SESSION
+  exit 1
+fi
 
 # :----------- PACK UP OUTPUTS ----------: #
 
@@ -97,17 +115,17 @@ fi
 for SENSOR in VNIR SWIR; do
   mkdir $FLIGHTLINE/$SENSOR
   SENSOR_DIRECTORY=output/$FLIGHTLINE/${SENSOR,,}
-  
+
   # Smile effect model
   mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_SmileEffect{,AtAtmFeatures}{,.hdr} $FLIGHTLINE/$SENSOR
   # Water vapor model
   mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_WVCModel.json $FLIGHTLINE/$SENSOR
   # Plots & figures
   mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_*.png $FLIGHTLINE/$SENSOR
-  
+
   # Data footprint
   mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_DataFootprint{,CoReg}.{dbf,prj,sh[px]} $FLIGHTLINE/$SENSOR
-  
+
   # Raw sensor products
   if [ $KEEP_RAW = 1 ]; then
     mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_IGM{,.hdr} $FLIGHTLINE/$SENSOR
@@ -116,7 +134,7 @@ for SENSOR in VNIR SWIR; do
     mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_RadioCaliCoeff{,.hdr} $FLIGHTLINE/$SENSOR
     mv $SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2_Raw{Rdn,PathLength,SCA}{,.hdr,.aux.xml} $FLIGHTLINE/$SENSOR
   fi
-  
+
   # Coregistration files
   # NOTE: Use subshell to localize `shopt`
   (
@@ -130,12 +148,12 @@ for SENSOR in VNIR SWIR; do
 done
 
 # Pack outputs into .TAR.GZ archive
-tar -czf ${FLIGHTLINE}_processed.tar.gz $FLIGHTLINE/*
+tar -czf ${FLIGHTLINE}_Processed.tar.gz $FLIGHTLINE/*
 
 # Move outputs back to CHTC staging (NOTE: No need to remove after)
 PROCESSED_DIRECTORY=$STAGING/data/processed/$SESSION
 mkdir -p $PROCESSED_DIRECTORY
-mv ${FLIGHTLINE}_processed.tar.gz $PROCESSED_DIRECTORY/
+mv ${FLIGHTLINE}_Processed.tar.gz $PROCESSED_DIRECTORY/
 
 # :----------- MAKE QUICKLOOKS ----------: #
 
@@ -162,4 +180,8 @@ rm -r $ENVDIR
 rm -r hypro data output
 rm -r $FLIGHTLINE
 
+echo "REMAINING FILES:"
+echo $(ls -R)
+
 exit 0
+

@@ -2,7 +2,7 @@
 universe = vanilla
 
 # IMPORTANT! Require execute servers that have Staging:
-requirements = (TARGET.HasCHTCStaging == TRUE)
+requirements = (OpSysMajorVer >= 8) && (TARGET.HasCHTCStaging == TRUE)
 
 # Define flightline variables
 basename = $(site)_$(date)
@@ -28,6 +28,10 @@ request_memory = $(memory)
 
 if defined project
    arguments=$(arguments) $(project)
+endif
+
+if defined rotation
+   environment = GRID_ROTATION=$(rotation)
 endif
 
 queue site, date, line, disk, memory from $(joblist)
