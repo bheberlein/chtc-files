@@ -1,0 +1,33 @@
+# HyPro.submit
+universe = vanilla
+
+# IMPORTANT! Require execute servers that have Staging:
+requirements = (TARGET.HasCHTCStaging == TRUE)
+
+# Define flightline variables
+basename = $(site)_$(date)
+flightline = $(basename)_$(line)
+
+# Specify executable
+executable = source/hypro/hypro.sh
+arguments = $(site) $(date) $(line)
+
+# Set files to capture HTCondor log & standard error stream
+log = ../logs/$(basename)/HyPro_$(Cluster)_$(flightline).log
+error = ../logs/$(basename)/HyPro_$(Cluster)_$(flightline).err
+
+# Copy over bash utilities to worker node
+transfer_input_files = utils
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+request_cpus = 1
+request_disk = $(disk)
+request_memory = $(memory)
+
+if defined project
+   arguments=$(arguments) $(project)
+endif
+
+queue site, date, line, disk, memory from $(joblist)
