@@ -18,6 +18,11 @@ ENVDIR=$ENVNAME
 ENVTAR=$ENVNAME-new.tar.gz
 HYPROTAR=hypro_1.0.1dev2.tar.gz
 
+# Whether to keep raw (unprojected) products
+KEEP_RAW=1
+# Whether to keep radiance products
+KEEP_RDN=1
+
 # :--------- SET UP ENVIRONMENT ---------: #
 
 # Set up Conda/Python environment
@@ -74,56 +79,62 @@ python hypro/src/hypro/workflow/main.py data/"${CONFIG##*/}"
 
 # :----------- PACK UP OUTPUTS ----------: #
 
+# Remove atmospheric database files
+rm -r output/$FLIGHTLINE/atm
+# Remove single-sensor products from merged directory
+rm output/$FLIGHTLINE/merge/${FLIGHTLINE}_{VNIR,SWIR}_*
+# Remove temporary files from orthorectification
+rm output/${FLIGHTLINE}/{vnir,swir}/OrthorectifiedImageData{,.hdr,.aux.xml}
+
 mkdir $FLIGHTLINE
-mkdir $FLIGHTLINE/{VNIR,SWIR}
 
 # Processing log
 mv output/*.log $FLIGHTLINE/
 # Merged orthorectified imagery & ancillary datasets
-# Merged reflectance imagery & ancillary datasets
 mv output/$FLIGHTLINE/merge/* $FLIGHTLINE/
-# # Remove single-sensor datasets
-# rm $FLIGHTLINE/${FLIGHTLINE}_{VNIR,SWIR}_*
-# Ancillary datasets
-mv $FLIGHTLINE/ancillary/* $FLIGHTLINE/
-rm -d $FLIGHTLINE/ancillary
 
-# BASICALLY EVERYTHING EXCEPT AvgRdn, DataMask, DEM, GLT, ProcessedNavData, Singleband
+if [ $KEEP_RDN = 0 ]; then
+  rm $FLIGHTLINE/${FLIGHTLINE}_MergedRadiance{,.hdr}
+fi
 
-# # Raw radiance imagery & calibration coefficients
-# mv output/$FLIGHTLINE/*/${FLIGHTLINE}_*_{Raw,Resampled}Rdn{,.hdr} $FLIGHTLINE/
-# mv output/$FLIGHTLINE/*/${FLIGHTLINE}_*_RadioCaliCoeff{,.hdr} $FLIGHTLINE/
-# # Saturation quality control metrics
-# mv output/$FLIGHTLINE/*/${FLIGHTLINE}_*_Saturation{Mask,PercentBands,PercentValue}{,.hdr} $FLIGHTLINE/
-# Smile effect data
-mv output/$FLIGHTLINE/*/${FLIGHTLINE}_*_SmileEffect{,AtAtmFeatures}{,.hdr} $FLIGHTLINE/
-# Water vapor model
-mv output/$FLIGHTLINE/*/${FLIGHTLINE}_*_WVCModel.json $FLIGHTLINE/
-# Unmerged image geometries
-mv output/$FLIGHTLINE/*/*_{,Corrected}IGM{,.hdr} $FLIGHTLINE/
-# Scan angles & path length
-mv output/$FLIGHTLINE/*/*_RawSCA{,.hdr} $FLIGHTLINE/
-mv output/$FLIGHTLINE/*/*_RawPathLength{,.hdr} $FLIGHTLINE/
-# Classification map
-mv output/$FLIGHTLINE/*/${FLIGHTLINE}_*_PreClass{,.hdr} $FLIGHTLINE/
-# Merged & unmerged image spatial footprints
-mv output/$FLIGHTLINE/*/*_DataFootprint*.{dbf,prj,sh[px]} $FLIGHTLINE/
-# Coregistration tie points
-mv output/$FLIGHTLINE/*/*_*CoRegPoints.{csv,png} $FLIGHTLINE/
-mv output/$FLIGHTLINE/*/*_*CoRegShiftDistribution.png $FLIGHTLINE/
-# Plots & figures
-mv output/$FLIGHTLINE/*/*.png $FLIGHTLINE/
-
-# # Move single-sensor products to their own directories
-# # (these were placed in the `merge` directory for some reason)
-# for f in $FLIGHTLINE/${FLIGHTLINE}_{VNIR,SWIR}_*; do
-#   mv $f $FLIGHTLINE/${f:(${#FLIGHTLINE}+1)*2:4}
-# done
-
-# mv output/$FLIGHTLINE/*/${FLIGHTLINE}_MergedPathLength{,.hdr} $FLIGHTLINE/ancillary
-# mv output/$FLIGHTLINE/*/${FLIGHTLINE}_MergedSCA{,.hdr} $FLIGHTLINE/ancillary
-# mv output/$FLIGHTLINE/*/${FLIGHTLINE}_WVC{,.hdr} $FLIGHTLINE/ancillary
-# mv output/$FLIGHTLINE/*/${FLIGHTLINE}_VIS{,.hdr} $FLIGHTLINE/ancillary
+# Single-sensor products
+for SENSOR in VNIR SWIR; do
+  mkdir $FLIGHTLINE/$SENSOR
+  SENSOR_DIRECTORY=output/$FLIGHTLINE/${SENSOR,,}
+  
+  # Filepath prefix
+  PREFIX=$SENSOR_DIRECTORY/${FLIGHTLINE}_${SENSOR}_*_FOVx2
+  
+  # Smile effect model
+  mv ${PREFIX}_SmileEffect{,AtAtmFeatures}{,.hdr} $FLIGHTLINE/$SENSOR
+  # Water vapor model
+  mv ${PREFIX}_WVCModel.json $FLIGHTLINE/$SENSOR
+  # Plots & figures
+  mv ${PREFIX}_*.png $FLIGHTLINE/$SENSOR
+  
+  # Data footprint
+  mv ${PREFIX}_DataFootprint{,CoReg}.{dbf,prj,sh[px]} $FLIGHTLINE/$SENSOR
+  
+  # Raw sensor products
+  if [ $KEEP_RAW = 1 ]; then
+    mv ${PREFIX}_IGM{,.hdr} $FLIGHTLINE/$SENSOR
+    mv ${PREFIX}_PreClass{,.hdr} $FLIGHTLINE/$SENSOR
+    mv ${PREFIX}_ProcessedNavData.txt $FLIGHTLINE/$SENSOR
+    mv ${PREFIX}_RadioCaliCoeff{,.hdr} $FLIGHTLINE/$SENSOR
+    mv ${PREFIX}_Raw{Rdn,PathLength,SCA}{,.hdr,.aux.xml} $FLIGHTLINE/$SENSOR
+  fi
+  
+  # Coregistration files
+  # NOTE: Use subshell to localize `shopt`
+  (
+    shopt -s nullglob
+    for f in ${PREFIX}_*CoRegPoints.{csv,png} \
+             ${PREFIX}_*{,Corrected}{IGM,RawSCA}{,.hdr,.aux.xml} \
+             ${PREFIX}_CoregistrationShifts{,.hdr}; do
+      mv $f $FLIGHTLINE/$SENSOR
+    done
+  )
+done
 
 # Pack outputs into .TAR.GZ archive
 OUTPUT_ARCHIVE=${FLIGHTLINE}_Processed.tar.gz
