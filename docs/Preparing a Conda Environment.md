@@ -45,16 +45,18 @@ A new Python environment can be built from within your user home directory on th
    name: htconda
    channels:
      - conda-forge
+     - nodefaults
    dependencies:
-     - python=3.6
-     - gdal=2.4.4
-     - numpy=1.19.4
-     - matplotlib=3.3.2
-     - pandas=1.1.4
-     - h5py=2.10.0
-     - scipy=1.5.3
-     - scikit-learn
+     - python>=3.8
+     - gdal>=3.3
+     - numpy>=1.20
+     - matplotlib=3.3
+     - pandas=1.2
+     - scipy=1.6
      - numba
+     - shapely
+     - arosics
+     - lxml
    ```
    
    Alternately, the environment can be built interactively using `conda`:
