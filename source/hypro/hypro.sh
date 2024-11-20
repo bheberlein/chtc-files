@@ -76,7 +76,14 @@ cp $CONFIG_DIR/$CONFIG data/"${CONFIG##*/}"
 # :----------- RUN PROCESSING -----------: #
 
 # Run HyPro reflectance processing
-python hypro/src/hypro/workflow/main.py data/"${CONFIG##*/}"
+if python hypro/src/hypro/workflow/main.py data/"${CONFIG##*/}"; then
+  echo "SUCCESS: Processing completed with normal exit code."
+else
+  echo "FAILED: Processing completed with abnormal exit code."
+  # If Python exits with an error, copy all files back to Staging & exit
+  mv output/* $STAGING/data/processed/$SESSION
+  exit 1
+fi
 
 # :----------- PACK UP OUTPUTS ----------: #
 
