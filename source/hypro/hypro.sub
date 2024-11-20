@@ -30,4 +30,8 @@ if defined project
    arguments=$(arguments) $(project)
 endif
 
+if defined rotation
+   environment = GRID_ROTATION=$(rotation)
+endif
+
 queue site, date, line, disk, memory from $(joblist)

@@ -73,6 +73,14 @@ resolve_config || exit 1
 # Copy over JSON configuration file (strip out leading directories if present)
 cp $CONFIG_DIR/$CONFIG data/"${CONFIG##*/}"
 
+# If grid rotation is passed in as an environment variable, update the configuration file
+if [ -n "${GRID_ROTATION+x}" ]; then
+  echo "Updating processing grid rotation: $GRID_ROTATION"
+  mv data/"${CONFIG##*/}" data/"${CONFIG##*/}.tmp"
+  jq -r --arg GRID_ROTATION "$GRID_ROTATION" '.Geometric_Correction.rotation = $GRID_ROTATION' data/"${CONFIG##*/}.tmp" > data/"${CONFIG##*/}"
+  rm data/"${CONFIG##*/}.tmp"
+fi
+
 # :----------- RUN PROCESSING -----------: #
 
 # Run HyPro reflectance processing
