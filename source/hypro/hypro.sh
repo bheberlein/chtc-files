@@ -4,6 +4,7 @@
 
 # User
 CHTC_USER=$(id -u -n)
+GROUP=townsend_group
 # File storage
 USER_STAGING=/staging/$CHTC_USER
 GROUP_STAGING=/staging/groups/townsend_hyspex
@@ -166,6 +167,18 @@ share $GROUP 770 $PROCESSED_DIRECTORY
 share $GROUP 770 $QUICKLOOK_DIRECTORY
 share $GROUP 660 $PROCESSED_DIRECTORY/$OUTPUT_ARCHIVE
 share $GROUP 660 $QUICKLOOK_DIRECTORY/$QUICKLOOK_ARCHIVE
+
+# :--------- MANAGE PERMISSIONS ---------: #
+
+function share () {
+  chmod $2 "$3" && chgrp $1 "$3"
+}
+
+# Set group write permissions (important if using group storage allocation on Staging)
+share $GROUP 770 $PROCESSED_DIRECTORY
+share $GROUP 770 $QUICKLOOK_DIRECTORY
+share $GROUP 660 $PROCESSED_DIRECTORY/${FLIGHTLINE}_Processed.tar.gz
+share $GROUP 660 $QUICKLOOK_DIRECTORY/${QUICKLOOK}.tar.gz
 
 # -------------- CLEAN UP -------------- #
 
