@@ -171,6 +171,24 @@ $FARNSWORTH/data/processed/airborne/$PROJECT/$YEAR/refl
 
 > **NOTE:** For `scp`, similar to `ssh` & other tools, the user & address of a remote machine can be specified along with the file path as `user@address:/path`.
 
+#### Using `rclone`
+
+##### Configure remotes
+
+To transfer files with `rclone`, you first need to register the remote machine.
+
+Locate the config file with
+
+```shell
+rclone config file
+```
+
+##### Copy files
+
+```shell
+rclone copy -P "remote:..."
+```
+
 #### Using WinSCP
 
 > **NOTE:** By default, WinSCP will open multiple connections to transfer files in parallel. While this achieves faster transfer speeds overall, it can be annoying when you are repeatedly asked to authenticate with MFA Duo. In *Preferences* > *Transfer* > *Background*, under "background Transfers" uncheck *"Use multiple connections for single transfer"*. This will ensure you only authenticate once per transfer, with some loss of speed.
