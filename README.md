@@ -1,3 +1,3 @@
-# CHTC Files
+# Resources for Deploying HyPro on CHTC
 
-This package provides resource files for image processing on CHTC.
+This package provides resource files & documentation to facilitate image processing with HyPro on distributed computing systems.
