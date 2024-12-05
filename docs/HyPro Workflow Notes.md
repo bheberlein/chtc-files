@@ -31,6 +31,7 @@ FLIGHTLINE=LOEW_20230621_01
 Additionally, certain domain names & filepaths have been abbreviated:
 
 ```shell
+CHTC_GROUP=townsend_airborne
 FARNSWORTH=farnsworth.russell.wisc.edu
 TRANSFER=transfer.chtc.wisc.edu
 STAGING=/staging/groups/$CHTC_GROUP

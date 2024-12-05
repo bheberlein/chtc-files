@@ -77,4 +77,4 @@
 
 - *Please provide any additional information that would aid us in creating your account.*
 
-  > **Please add to `townsend_user` group. Will need acess to `townsend-submit` & our `townsend_hyspex` allocation on Staging.**
+  > **Please add to `townsend_user` group. Will need acess to `townsend-submit` & our `townsend_airborne` allocation on Staging.**
