@@ -24,7 +24,7 @@ In order to use CHTC services, you will need to request an account.
 
 To request an account with CHTC, fill out the [request form](https://chtc.cs.wisc.edu/form). You will need to provide some detailed information about how you expect to use CHTC. You will have to meet with CHTC staff to discuss this further to get approved, so discuss these details with your supervisor ahead of time if you are unsure about anything.
 
-In your request, be sure to ask for access to Staging (CHTC large data temporary storage). Also, request to have your user added to the `townsend_hyspex` user group.
+In your request, be sure to ask for access to Staging (CHTC large data temporary storage). Also, request to have your user added to the `townsend_airborne` user group.
 
 
 

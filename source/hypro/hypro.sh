@@ -7,7 +7,7 @@ CHTC_USER=$(id -u -n)
 GROUP=townsend_group
 # File storage
 USER_STAGING=/staging/$CHTC_USER
-GROUP_STAGING=/staging/groups/townsend_hyspex
+GROUP_STAGING=/staging/groups/townsend_airborne
 STAGING=$GROUP_STAGING
 # Resource directories
 SOURCE_DIR=$STAGING/source/environment
