@@ -2,7 +2,7 @@
 universe = vanilla
 
 # IMPORTANT! Require execute servers that have Staging:
-requirements = (TARGET.HasCHTCStaging == TRUE)
+requirements = (TARGET.OpSysMajorVer >= 8) && (TARGET.HasCHTCStaging == TRUE)
 
 # Specify executable
 executable = source/submit/testing/testing.sh
