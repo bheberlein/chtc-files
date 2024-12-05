@@ -17,7 +17,7 @@ ENVNAME=htconda
 ENVDIR=$ENVNAME
 # Packages
 ENVTAR=$ENVNAME-new.tar.gz
-HYPROTAR=hypro_1.0.1dev4.tar.gz
+HYPROTAR=hypro_1.0.1dev5.tar.gz
 
 # Whether to keep raw (unprojected) products
 KEEP_RAW=1
