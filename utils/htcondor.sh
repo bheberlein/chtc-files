@@ -1,5 +1,6 @@
 status () {
   condor_q $@ -pr ~/htcondor/usage.cpf
+}
 
 boost () {
   # Get prior resource requests for the job
