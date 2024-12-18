@@ -99,7 +99,7 @@ For CHTC processing, some additional files com into play:
   - Before the CHTC workflow can be run, the necessary files must be transferred to CHTC servers.
     - The **raw data inputs** (`*.tar.gz`) must be transferred to **CHTC Staging** (`$STAGING/data/raw`).
     - The **config file(s)** must be transferred to **CHTC Staging** (`$STAGING/config`). The config files may be defined on a per-site, -session or -flightline basis. These are JSON files that are used to configure the processing options.
-    - The **job list** (`*_JobList.txt`) must be transferred to CHTC (e.g. **either** to `$STAGING/joblist` or to your user home on `townsend-submit`). The job list is a plaintext file that defines a batch of jobs, providing the flightline parameters (site name, date & flightline number) and resource requirements (disk & memory requests) for each job, one per line.
+    - The **job list** (`*_JobList.txt`) must be transferred to CHTC (e.g. **either** to `$STAGING/joblist` or to your user home on `townsend-ap`). The job list is a plaintext file that defines a batch of jobs, providing the flightline parameters (site name, date & flightline number) and resource requirements (disk & memory requests) for each job, one per line.
   - Other files that must be available on Staging include:
     - Atmospheric lookup tables
     - Surface elevation model (DEM or DSM)
@@ -200,16 +200,16 @@ rclone copy -P "remote:..."
 
 - Connect to the **submit server** to submit jobs.
   
-  - We have our own dedicated submit server hardware at **`townsend-submit.chtc.wisc.edu`**.
-    - *Let CHTC know in your application form that you will need access to `townsend-submit` & our `townsend_hyspex` group allocation on Staging.*
+  - We have our own dedicated submit server hardware at **`townsend-ap.chtc.wisc.edu`**.
+    - *Let CHTC know in your application form that you will need access to `townsend-ap` & our `townsend_airborne` group allocation on Staging.*
   - CHTC has general-use submit servers at `ap2001.chtc.wisc.edu` & `ap2002.chtc.wisc.edu`.
-    - We don't usually use these, but they can serve as a backup if `townsend-submit` is having issues or otherwise needing maintenance.
-    - *If you have only used `townsend-submit` in the past, you may need to request access.*
+    - We don't usually use these, but they can serve as a backup if `townsend-ap` is having issues or otherwise needing maintenance.
+    - *If you have only used `townsend-ap` in the past, you may need to request access.*
   - Make sure that you have prepared your workspace on the submit server (see [Setting up CHTC Workspace](#setting-up-chtc-workspace), below). This only needs to be done once (though you may occasionally need to pull updates to the `hypro-chtc` repo, i.e. usually `git pull origin dev`).
 
 - Job submission
   
-  > ***NOTE:** You should be in a terminal session on `townsend-submit` or one of the other submit servers.*
+  > ***NOTE:** You should be in a terminal session on `townsend-ap` or one of the other submit servers.*
   
   1. **Navigate into the `hypro-chtc` repo directory:**
      
@@ -320,7 +320,7 @@ rclone copy -P "remote:..."
      
      - When a job fails, ...
      
-       1. Look in the `*.err` files in `~/logs` on `townsend-submit` (open with a text editor).
+       1. Look in the `*.err` files in `~/logs` on `townsend-ap` (open with a text editor).
           - Look for error messages & stack traces, especially at the end of the log, as an indication of anything that may have gone wrong.
           - If the reflectance processing completed successfully, there should be a log statement near the end that says *"All flightlines processed!"*. Other errors could still occur after that, but these would most often indicate an issue with e.g. file paths, permissions or quotas on Staging.
      
@@ -550,7 +550,7 @@ Prior to running the BRDF workflow, the processed reflectance files should be st
 
 ###### Submit Servers
 
-- `townsend-submit.chtc.wisc.edu`
+- `townsend-ap.chtc.wisc.edu`
 - `ap2001.chtc.wisc.edu`
 - `ap2002.chtc.wisc.edu`
 
@@ -560,11 +560,11 @@ Prior to running the BRDF workflow, the processed reflectance files should be st
 
 > ***NOTE:** The instructions in this section only need to be followed once to set up your workspace on a particular submit server.*
 
-> ***NOTE:** Before running these commands, first log in to `townsend-submit.chtc.wisc.edu` (or your submit server of choice).*
+> ***NOTE:** Before running these commands, first log in to `townsend-ap.chtc.wisc.edu` (or your submit server of choice).*
 
 #### Setting up your user space on the submit server
 
-1. **Clone the [`hypro-chtc` repository](https://github.com/enspec/hypro-chtc)** into your user home on `townsend-submit` (or other submit server).
+1. **Clone the [`hypro-chtc` repository](https://github.com/enspec/hypro-chtc)** into your user home on `townsend-ap` (or other submit server).
 
    ```shell
    git clone http://github.com/enspec/hypro-chtc
