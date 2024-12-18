@@ -201,7 +201,4 @@ rm -r $ENVDIR
 rm -r hypro data output
 rm -r $FLIGHTLINE
 
-echo "REMAINING FILES:"
-echo $(ls -R)
-
 exit 0

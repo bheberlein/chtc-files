@@ -10,6 +10,10 @@
 
 
 
+- [CHTC Status](https://status.chtc.wisc.edu)
+
+
+
 ## About CHTC
 
 The Center for High-Throughput Computing (CHTC) uses a task scheduling & management system called **HTCondor** to facilitate distributed high-throughput and high-performance computing.
@@ -299,5 +303,4 @@ The above examples use `RequestMemory` and `MemoryUsage`, but you can run the sa
 > ***NOTE:** Confusingly, disk space is reported in **KiB**, while memory is reported in **MiB**.*
 
 If you need to raise either the disk or memory for a job, it might be a good idea to increase both.
-
 

@@ -8,6 +8,10 @@ HyPro is a Python package for processing raw imaging spectrometer data with a fo
 
 ## Notes
 
+### Caution in the Shell
+
+*This section has not been written yet.*
+
 ### Filepaths
 
 - **Pay careful attention to the filepaths** in the examples here. In particular, pay attention to **whether or not the path begins with a slash** (`/`) , which indicates that the path is **absolute**, i.e. expressed relative to the filesystem root. By comparison, **relative paths** (which do not begin with a slash) are expressed and interpreted relative to the current working directory, or the directory from which a command or script is called.
@@ -423,7 +427,7 @@ The reflectance images will remain on Farnsworth when running the BRDF correctio
 
 Prior to running the BRDF workflow, the processed reflectance files should be structured like
 
-```shell
+```commandline
 └── $PROJECT
     └── *_LinesDict.json
     └── refl
@@ -433,7 +437,7 @@ Prior to running the BRDF workflow, the processed reflectance files should be st
 
 **Or**, if the `--grouped-by-site` option is passed, an additional directory level will be added above the session level to organized files by site:
 
-```shell
+```commandline
 └── $PROJECT
     └── *_LinesDict.json
     └── refl
@@ -452,13 +456,13 @@ Prior to running the BRDF workflow, the processed reflectance files should be st
      
      - Pass path to `refl` directory as positional argument
        
-     ```python
-     from enspec.processing.utilities.lines_dict import generate_lines_dict
+       ```python
+       from enspec.processing.utilities.lines_dict import generate_lines_dict
+       
+       generate_lines_dict('/data/processed/airborne/Hancock_ARS/2024/refl')
+       ```
      
-     generate_lines_dict('/data/processed/airborne/Hancock_ARS/2024/refl')
-     ```
-     
-     **NOTE:** This assumes all images are suitable to use for fitting BRDF. We want to manually remove the numbers of any bad images/flightlines.
+     **NOTE:** The file is generated assuming that all images are suitable to use for fitting BRDF corrections. We want to manually edit this file to remove the numbers of any bad images/flightlines so that they will be withheld during model fitting.
 
 2. **Open QGIS project to inspect imagery.**
 
@@ -469,6 +473,7 @@ Prior to running the BRDF workflow, the processed reflectance files should be st
    - **NOTE:** Bad images will be withheld during **fitting** of the BRDF correction, but the correction will be **applied** to all of the images.
 
 4. **Bad images** (i.e. > 10% cloud shadow) **should be removed** from the JSON file.
+   
    1. Open the JSON in a text editor.
    2. Find the corresponding session in the JSON structure (look for e.g. `"LOEW_20230621": [...],`).
    3. Find the image number in the associated list & remove it. (Make sure to remove the comma as well!)
@@ -500,20 +505,33 @@ Prior to running the BRDF workflow, the processed reflectance files should be st
    - Navigate to `enspec` repo first
      
      ```shell
-     cd git/enspec
+     cd ~/git/enspec
      ```
      
    - The simplest way to call BRDF processing is
      
      ```shell
-     python brdf_batch_process.py -d $data_directory --invert-mask
+     python ${script_dir}/brdf_batch_process.py -d $data_directory --invert-mask
      ```
      
+     where (if running from `~/git/enspec` as above) `script_dir=src/enspec/processing/workflows`.
+     
+     > **NOTES:**
+     > - When constructing filepaths that point to **network filesystems (like the Farnsworth drive)** you should take extra care to make sure that they are expressed correctly for the machine you are running the code on. That is, filepaths pointing to files on Farnsworth will generally have a different prefix, depending on which machine the code is run from &  (leading portion of the path, which could include multiple directory levels) 
+     > - **If the `-f` flag is NOT used** to specify the lines dictionary file, by default the script will look by for a file directly within  
+     > - The **data directory** (supplied to the command-line script with the `-d` flag) should be one directory level above the `refl` folder.
+     > - If you are doing the **BRDF corrections on Krusty**, paths pointing to **files stored on Farnsworth** need to be constructed relative to the mount point at `/mnt/farnsworth/Enspec`.
+     > - On a **Windows** machine (e.g. **UWSPEX**), network drives such as Farnsworth are typically mapped to a **drive letter** (e.g. `Z:\`) which serves as the filepath prefix.
+     > - On **macOS**, the network share will appear in `/Volumes` (e.g. `/Volumes/Enspec/`)
+     >              Original file path for directory: `-d 'Z:/data/processed/airborne/BorealBirds/2024'`
+     >              File path for directory when working from Krusty: `-d'/mnt/farnsworth/Enspec/data/processed/airborne/BorealBirds/2024'`
+   
+   
    - Optionally, specify the lines dictionary file to use by appending to the command above
      
-      ```shell
-      -f path/to/$PROJECT/$PROJECT_LinesDict.json
-      ```
+     ```shell
+     -f path/to/$PROJECT/$PROJECT_LinesDict.json
+     ```
      
      By default, (no `-f` flag) the script looks for a file with the same basename as the data directory, e.g. `HARS_2024_LinesDict.json`
    
@@ -524,6 +542,8 @@ Prior to running the BRDF workflow, the processed reflectance files should be st
      ```shell
      python src/enspec/processing/workflows/brdf_batch_process.py -d $data_directory --invert-mask
      ```
+   - Optionally, if you are doing a test run for BRDF corrections and want to submit a single site or one session (assuming you have already generated a test 
+     LinesDict.json file) you would also append to the command above by using `-f ${subset}_LinesDict.json`
 
 
 
