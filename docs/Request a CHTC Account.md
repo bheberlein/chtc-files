@@ -77,4 +77,4 @@
 
 - *Please provide any additional information that would aid us in creating your account.*
 
-  > **Please add to `townsend_user` group. Will need access to `townsend-ap` & our `townsend_airborne` allocation on Staging.**
+  > **Please add to `townsend_user` group. Will need access to `townsend-ap2000` & our `townsend_airborne` allocation on Staging.**

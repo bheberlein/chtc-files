@@ -3,7 +3,7 @@
 ## Assign Variables
 
 ```shell
-SUBMIT=townsend-ap.chtc.wisc.edu
+SUBMIT=townsend-ap2000.chtc.wisc.edu
 ```
 
 ```shell
